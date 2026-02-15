@@ -71,7 +71,7 @@ def manage_drives():
     if not admin_required():
         return redirect(url_for('auth.login'))
     conn = get_connection()
-    drives = conn.execute("select p.id , p.title , p.status , c.name as company_name from placement_drive p join companies c on p.company_id = c.id").fetchall()
+    drives = conn.execute("select p.id , p.title  ,p.description, p.salary, p.skills_required , p.eligibility_branch,p.eligibility_cgpa, p.eligibility_year ,p.status ,p.application_deadline, c.name as company_name from placement_drive p join companies c on p.company_id = c.id order by p.created_at desc").fetchall()
     conn.close()
     return render_template("admin_drives.html",drives=drives)
 
@@ -85,7 +85,7 @@ def pending_drives():
     conn.close()
     return jsonify([dict(d) for d in drives])
 
-@admin_bp.route("/drives/<int:drive_id>/approve",methods=["POST"])
+@admin_bp.route("/drives/<int:drive_id>/approve")
 def approve_drive(drive_id):
     if not admin_required():
         return redirect(url_for('auth.login'))
@@ -96,7 +96,7 @@ def approve_drive(drive_id):
 
     return redirect(url_for('admin.manage_drives'))
 
-@admin_bp.route("/drives/<int:drive_id>/close",methods=["POST"])
+@admin_bp.route("/drives/<int:drive_id>/close")
 def close_drive(drive_id):
     if not admin_required():
         return redirect(url_for('auth.login'))
@@ -146,12 +146,22 @@ def toggle_student_blacklist(student_id):
     return redirect(url_for('admin.manage_students'))
 
 
-@admin_bp.route("/companies/<int:company_id>/deactivate")
-def deactivate_company(company_id):
+@admin_bp.route("/companies/<int:company_id>/blacklist")
+def blacklist_company(company_id):
     if not admin_required():
         return redirect(url_for('auth.login'))
     conn=get_connection()
     conn.execute("update users set is_active=0 where id=?",(company_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin.manage_companies'))
+
+@admin_bp.route("/companies/<int:company_id>/unblacklist")
+def unblacklist_company(company_id):
+    if not admin_required():
+        return redirect(url_for('auth.login'))
+    conn=get_connection()
+    conn.execute("update users set is_active=1 where id=?",(company_id,))
     conn.commit()
     conn.close()
     return redirect(url_for('admin.manage_companies'))

@@ -1,6 +1,7 @@
 from flask import Flask, session, redirect, url_for,render_template
 from auth import auth_bp
 from admin import admin_bp
+from company import company_bp
 from database import init_db
 from config import DB_PATH
 
@@ -11,6 +12,7 @@ init_db()
 
 app.register_blueprint(auth_bp, url_prefix="/auth")
 app.register_blueprint(admin_bp, url_prefix="/admin")
+app.register_blueprint(company_bp, url_prefix="/company")
 
 @app.route("/")
 def home():
