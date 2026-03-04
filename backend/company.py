@@ -68,7 +68,7 @@ def view_applications(drive_id):
     if not company_required():
         return redirect(url_for('auth.login'))
     conn = get_connection()
-    applications = conn.execute("select a.id, s.name, s.roll_no, a.status, a.interview_date ,a.feedback,u.email from applications a join students s on a.student_id = s.id join users u on s.user_id = u.id where a.drive_id=?", (drive_id,)).fetchall()
+    applications = conn.execute("select a.id, s.id as student_id ,s.name, s.roll_no, a.status, a.interview_date ,a.feedback,u.email from applications a join students s on a.student_id = s.id join users u on s.user_id = u.id where a.drive_id=?", (drive_id,)).fetchall()
     conn.close()
     return render_template("company_applications.html", applications=applications, drive_id = drive_id)
 
@@ -128,3 +128,12 @@ def schedule_interview(app_id):
         return redirect(url_for('company_dashboard'))
     conn.close()
     return render_template("schedule_interview.html", student=data,drive=data)
+
+@company_bp.route("/student/<int:student_id>")
+def view_student_profile(student_id):
+    if not company_required():
+        return redirect(url_for("auth.login"))
+    conn = get_connection()
+    student = conn.execute("select s.*,u.email from students s join users u on s.user_id = u.id where s.id=?", (student_id,)).fetchone()
+    conn.close()
+    return render_template("company_student_profile.html",student=student)

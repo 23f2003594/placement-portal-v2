@@ -1,5 +1,6 @@
 from flask import Blueprint , session , redirect , url_for , render_template,request
 from database import get_connection
+from datetime import datetime
 
 student_bp = Blueprint("student",__name__)
 
@@ -12,7 +13,7 @@ def view_drives():
         return redirect(url_for("auth.login"))
     search = request.args.get("search","")
     conn = get_connection()
-    query="select p.id,p.title,p.description,p.salary,p.skills_required,p.application_deadline,c.name as company_name from placement_drive p join companies c on p.company_id = c.id where p.status='approved' and c.approval_status='approved'"
+    query="select p.id,p.title,p.description,p.salary,p.skills_required,p.application_deadline,c.name as company_name exists(select 1 from applications a where a.drive_id = p.id and a.student_id =?) as already_applied from placement_drive p join companies c on p.company_id = c.id where p.status='approved' and c.approval_status='approved'"
     params=[]
     if search:
         query+="and (p.title like ? or c.name like ? or p.skills_required like ?)"
@@ -34,11 +35,22 @@ def apply_drives(drive_id):
     if existing:
         conn.close()
         return "Already applied"
-    drive = conn.execute("select eligibility_branch,eligibility_cgpa,eligibility_year from placement_drive where id=?",(drive_id,)).fetchone()
+    drive = conn.execute("select application_deadline,status,eligibility_branch,eligibility_cgpa,eligibility_year from placement_drive where id=?",(drive_id,)).fetchone()
+    if(drive["status"]!="approved"):
+        return "Drive not open"
+    if(drive["application_deadline"]):
+        deadline = datetime.strptime(drive["application_deadline"],"%Y-%m-%d")
+        if datetime.now()>deadline:
+            return "Deadline passed"
+
     student_data = conn.execute("select branch,cgpa,year from students where id=?",(student_id,)).fetchone()
     if(student_data["cgpa"]<drive["eligibility_cgpa"]):
         conn.close()
         return "Not eligible"
+    placed = conn.execute("select 1 FROM applications where student_id=? AND status='placed' ", (student_id,)).fetchone()
+    if placed:
+        conn.close()
+        return "You are already placed."
     conn.execute("insert into applications(drive_id,student_id,status) values(?,?,'applied')",(drive_id,student_id))
     conn.commit()
     conn.close()

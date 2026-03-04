@@ -205,7 +205,7 @@ def view_student(student_id):
 
     conn = get_connection()
 
-    student = conn.execute("select s.*, u.email from students s join users u on s.user_id=u.id where s.id=?", (student_id,)).fetchone()
+    student = conn.execute("select s.*, u.email,u.is_active from students s join users u on s.user_id=u.id where s.id=?", (student_id,)).fetchone()
     conn.close()
     return render_template("admin_student_profile.html", student=student)
 
