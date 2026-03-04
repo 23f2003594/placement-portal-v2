@@ -121,9 +121,21 @@ def view_applications():
     if not admin_required():
         return redirect(url_for('auth.login'))
     conn=get_connection()
-    apps = conn.execute("select a.status , s.name as student_name , c.name as company_name ,p.title as job_title   from applications a join students s on a.student_id = s.id join placement_drive p on a.drive_id = p.id join companies c on p.company_id =c.id").fetchall()
+    apps = conn.execute("select c.name as company_name ,p.title as job_title ,p.id as drive_id  from placement_drive p  join companies c on p.company_id =c.id order by p.id desc").fetchall()
     conn.close()
-    return render_template("admin_applications.html",applications=apps)
+    return render_template("admin_applications_drives.html",applications=apps)
+
+@admin_bp.route("/applications/<int:drive_id>",methods=["GET","POST"])
+def view_drive_applications(drive_id):
+    if not admin_required():
+        return redirect(url_for('auth.login'))
+
+    conn = get_connection()
+
+    drive = conn.execute("select p.title, c.name as company_name from placement_drive p join companies c on p.company_id = c.id where p.id=?", (drive_id,)).fetchone()
+    applications = conn.execute("select s.name as student_name,s.roll_no, a.status from applications a join students s on a.student_id = s.id where a.drive_id=?", (drive_id,)).fetchall()
+    conn.close()
+    return render_template("admin_drives_applications.html",drive=drive,applications=applications)
 
 @admin_bp.route("/students/<int:user_id>/toggle-active")
 def toggle_student_active(user_id):
@@ -186,5 +198,15 @@ def search_companies():
     conn.close()
     return render_template("admin_companies.html",companies=companies,query=query,is_search=True)
 
+@admin_bp.route("/students/<int:student_id>")
+def view_student(student_id):
+    if not admin_required():
+        return redirect(url_for("auth.login"))
+
+    conn = get_connection()
+
+    student = conn.execute("select s.*, u.email from students s join users u on s.user_id=u.id where s.id=?", (student_id,)).fetchone()
+    conn.close()
+    return render_template("admin_student_profile.html", student=student)
 
 

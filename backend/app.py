@@ -2,6 +2,7 @@ from flask import Flask, session, redirect, url_for,render_template
 from auth import auth_bp
 from admin import admin_bp
 from company import company_bp
+from student import student_bp
 from database import init_db
 from config import DB_PATH
 
@@ -13,6 +14,7 @@ init_db()
 app.register_blueprint(auth_bp, url_prefix="/auth")
 app.register_blueprint(admin_bp, url_prefix="/admin")
 app.register_blueprint(company_bp, url_prefix="/company")
+app.register_blueprint(student_bp,url_prefix="/student")
 
 @app.route("/")
 def home():
@@ -28,13 +30,13 @@ def admin_entry():
 def company_dashboard():
     if session.get("role") != "company":
         return redirect(url_for("auth.login"))
-    return "company dashboard"
+    return render_template("company_dashboard.html")
 
 @app.route("/student/dashboard")
 def student_dashboard():
     if session.get("role") != "student":
         return redirect(url_for("auth.login"))
-    return "student dashboard"
+    return render_template("student_dashboard.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

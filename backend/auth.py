@@ -24,7 +24,7 @@ def register_student():
         try:
             cur.execute("insert into users (email,password,role) values (?,?,?)",(email,pwd,"student"))
             user_id = cur.lastrowid
-            cur.execute("insert into students (user_id,name,branch,year,cgpa,education,skills,resume_link,roll_no) values (?,?,?,?,?,?,?,?)",(user_id,name,branch,year,cgpa,education,skills,resume_link,roll_no))
+            cur.execute("insert into students (user_id,name,branch,year,cgpa,education,skills,resume_link,roll_no) values (?,?,?,?,?,?,?,?,?)",(user_id,name,branch,year,cgpa,education,skills,resume_link,roll_no))
             conn.commit()
             flash("Registration successful.","success")
             return redirect(url_for('auth.login'))

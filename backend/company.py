@@ -32,6 +32,10 @@ def create_drive():
         company = conn.execute("select * from companies where user_id=?", (user_id,)).fetchone()
         if not company:
             return "Company profile not found. Please contact admin."
+        company_data = conn.execute("select approval_status from companies where user_id=?",(user_id,)).fetchone()
+        if(company_data["approval_status"]!="approved"):
+            conn.close()
+            return "Company not approved"
         company_id = company['id']
         title = request.form.get("title")
         description = request.form.get("description")
@@ -88,26 +92,39 @@ def reject(app_id):
     conn.close()
     return redirect(request.referrer)
 
-@company_bp.route("/application/<int:app_id>/select")
+@company_bp.route("/application/<int:app_id>/select",methods=["GET","POST"])
 def select(app_id):
     if not company_required():
-        return redirect(url_for('auth.login'))
+        return redirect(url_for("auth.login"))
+
     conn = get_connection()
-    conn.execute("update applications set status='selected' where id=?", (app_id,))
-    conn.commit()
+    if request.method=="POST":
+        offer_link = request.form["offer_link"]
+        app = conn.execute("select drive_id, student_id from applications where id=?", (app_id,)).fetchone()
+
+        drive = conn.execute("select company_id, title, salary from placement_drive where id=?", (app["drive_id"],)).fetchone()
+        conn.execute("update applications set status='selected' where id=? ", (app_id,))
+        conn.execute("insert into placement(application_id, student_id, company_id, position, salary,offer_letter_link) values (?, ?, ?, ?, ?,?)", (app_id,app["student_id"],drive["company_id"],drive["title"],drive["salary"],offer_link))
+        conn.commit()
+        conn.close()
+        return redirect(request.referrer)
     conn.close()
-    return redirect(request.referrer)
+    return render_template("company_select_offer.html",app_id=app_id)
+    
+
 
 @company_bp.route("/application/<int:app_id>/schedule", methods=["GET","POST"])
 def schedule_interview(app_id):
     if not company_required():
         return redirect(url_for('auth.login'))
+    conn = get_connection()
+    data = conn.execute("select s.name as student_name , s.id as student_id , p.title as drive_title from applications a join students s on a.student_id = s.id join placement_drive p on a.drive_id = p.id where a.id=?",(app_id,)).fetchone()
     if request.method == "POST":
         interview_date = request.form["interview_date"]
         feedback = request.form["feedback"]
-        conn = get_connection()
-        conn.execute("update applications set interview_date=?, feedback=? where id=?", (interview_date, feedback, app_id))
+        conn.execute("update applications set interview_date=?, feedback=?,status='interview' where id=?", (interview_date, feedback, app_id))
         conn.commit()
         conn.close()
         return redirect(url_for('company_dashboard'))
-    return render_template("schedule_interview.html", app_id=app_id)
+    conn.close()
+    return render_template("schedule_interview.html", student=data,drive=data)
