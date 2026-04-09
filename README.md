@@ -4,7 +4,7 @@ A comprehensive, three-tier full-stack placement management system designed to s
 
 ---
 
-## 🏗 System Architecture
+## System Architecture
 
 The project follows a secure Three-Tier Architecture:
 1. **Frontend**: Vue.js 3 (Vite) - Interactive UI for Students, Companies, and Admins.
