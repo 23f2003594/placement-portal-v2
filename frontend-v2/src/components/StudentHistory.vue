@@ -37,7 +37,7 @@
                 </td>
                 <td class="text-center">
                   <div v-if="app.status === 'selected'" class="d-grid gap-2">
-                    <a :href="app.offer_letter_link" target="_blank" class="btn btn-sm btn-outline-info">View Offer</a>
+                    <a :href="app.remarks" target="_blank" class="btn btn-sm btn-outline-info">View Offer</a>
                     <button class="btn btn-sm btn-success" @click="confirmplacement(app.application_id)">Accept & Confirm</button>
                     <button class="btn btn-sm btn-danger" @click="rejectplacement(app.application_id)">Reject</button>
                   </div>
