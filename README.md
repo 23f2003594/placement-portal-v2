@@ -118,6 +118,7 @@ placement-portal-v2/
 
 ## Author
 Shakthi Kumaran Gnanavel
+VIT Chennai 
 
 ## License
 This project is for academic and educational purposes.
